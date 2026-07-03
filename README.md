@@ -11,10 +11,12 @@ Department of Mechanical Engineering).
 
 ## Demo video
 
-A full autonomous search mission (takeoff, layered scan, mapping, target inspection,
-return and landing), sped up ~19x to under a minute:
-**[media/drone_swarm_mission_19x.mp4](media/drone_swarm_mission_19x.mp4)**
-(Gazebo view on top, live operator dashboard below).
+[![Autonomous search mission demo](media/drone_swarm_mission_teaser.gif)](media/drone_swarm_mission_19x.mp4)
+
+A full autonomous search mission - takeoff, layered scan, live voxel mapping, target
+inspection, return and landing - sped up ~19x to under a minute. Gazebo view on top,
+live operator dashboard below. **Click the preview for the full 57-second video:**
+[media/drone_swarm_mission_19x.mp4](media/drone_swarm_mission_19x.mp4)
 
 ## What the system does
 
