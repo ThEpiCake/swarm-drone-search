@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# @name Gazebo x500 swarm indoor GNSS-denied
+#
+# @type Quadrotor
+#
+
+PX4_SIM_MODEL=${PX4_SIM_MODEL:=x500_swarm}
+
+. ${R}etc/init.d-posix/airframes/4001_gz_x500
+
+echo "Configuring indoor GNSS-denied defaults for x500_swarm"
+param set-default SYS_HAS_GPS 0
+param set-default SIM_GPS_USED 0
+param set-default EKF2_GPS_CTRL 0
+param set-default COM_ARM_WO_GPS 1
+# Optical flow in the default Gazebo room is fragile over low-texture surfaces and
+# fights with external-vision fusion. For the SLAM/VIO indoor stack, trust EV XY/vel/yaw
+# and keep the rangefinder only for height.
+param set-default EKF2_OF_CTRL 0      # x500_swarm has no optical-flow sensor
+param set-default EKF2_HGT_REF 3      # Vision (EV Z) as primary height reference
+param set-default SENS_FLOW_MINHGT 0.0
+
+# External vision (SLAM/VIO via slam_to_px4.py) feeds /fmu/in/vehicle_visual_odometry.
+# EKF2_EV_CTRL=15: fuse all EV: XY+Z position, velocity, yaw.
+# EKF2_MAG_TYPE=5: disable magnetometer completely — prevents heading resets on wall impact.
+# EKF2_EV_NOISE_MD=1: use per-message covariance from slam_to_px4 (0.20 m² XY, 0.10 m² Z).
+# EKF2_BARO_CTRL=0: disable barometer; height from EV Z (rangefinder → odom → TF → EV).
+param set-default EKF2_EV_CTRL 15
+param set-default EKF2_EV_DELAY 50
+param set-default EKF2_EVP_NOISE 0.20
+param set-default EKF2_EV_NOISE_MD 1
+param set-default EKF2_EVP_GATE 10
+param set-default EKF2_MAG_TYPE 5
+param set-default EKF2_BARO_CTRL 1

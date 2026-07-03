@@ -1,0 +1,200 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="indoor_arena">
+
+    <gravity>0 0 -9.81</gravity>
+
+    <!-- GPS origin — matches PX4 SITL default (Zurich). Without this the navsat
+         sensor outputs lat/lon near 0°N 0°E, causing the EKF NED frame to be
+         placed thousands of kilometres from the drone's actual world position. -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>47.397742</latitude_deg>
+      <longitude_deg>8.545594</longitude_deg>
+      <elevation>488.0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.75 0.75 0.75 1</ambient>
+      <background>0.85 0.88 0.92 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <light name="sun" type="directional">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 100 0 0 0</pose>
+      <diffuse>0.95 0.95 0.95 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.45 0.15 -0.88</direction>
+    </light>
+
+    <!--
+      Bounded 20x20 m indoor room — replaces apf_open_arena's open field so the
+      "Indoor GNSS-denied" thesis premise actually holds for Stage C, and so the
+      Stage D entropy/exploration map has a finite space to converge over. Walls
+      are 5 m tall (comfortably above the 3 m cruise altitude) and 0.3 m thick,
+      centered on the ±10 m perimeter, slightly overlapped at the corners.
+    -->
+    <model name="ground">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>20.6 20.6 0.2</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>20.6 20.6 0.2</size></box>
+          </geometry>
+          <material>
+            <ambient>0.58 0.58 0.58 1</ambient>
+            <diffuse>0.68 0.68 0.68 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>0 0 -0.1 0 0 0</pose>
+    </model>
+
+    <model name="wall_north">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>20.6 0.3 5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>20.6 0.3 5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.6 1</ambient><diffuse>0.65 0.65 0.7 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>0 10 2.5 0 0 0</pose>
+    </model>
+    <model name="wall_south">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>20.6 0.3 5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>20.6 0.3 5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.6 1</ambient><diffuse>0.65 0.65 0.7 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>0 -10 2.5 0 0 0</pose>
+    </model>
+    <model name="wall_east">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 20.6 5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 20.6 5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.6 1</ambient><diffuse>0.65 0.65 0.7 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>10 0 2.5 0 0 0</pose>
+    </model>
+    <model name="wall_west">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 20.6 5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 20.6 5</size></box></geometry>
+          <material><ambient>0.55 0.55 0.6 1</ambient><diffuse>0.65 0.65 0.7 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-10 0 2.5 0 0 0</pose>
+    </model>
+
+    <!--
+      Two slim interior pillars for APF/perception variety. Placed off the
+      cardinal N/S/E/W axes (the spawn-to-center convergence lines run along
+      those axes — see DRONES layout in c1_multi_apf.launch.py: spawns at
+      (±5,0)/(0,±5) converging on (0,0)) so the center stays clear for the
+      4-way APF interaction while still giving the swarm something to route
+      around near the (3,-3)/(-3,3) diagonal corridors.
+    -->
+    <model name="pillar_1">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.4</radius><length>5</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.4</radius><length>5</length></cylinder></geometry>
+          <material><ambient>0.7 0.35 0.15 1</ambient><diffuse>0.8 0.45 0.2 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>3 -3 2.5 0 0 0</pose>
+    </model>
+    <model name="pillar_2">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.4</radius><length>5</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.4</radius><length>5</length></cylinder></geometry>
+          <material><ambient>0.15 0.4 0.7 1</ambient><diffuse>0.2 0.5 0.8 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-3 3 2.5 0 0 0</pose>
+    </model>
+
+    <!--
+      Optical-flow texture markers — same proven trick as apf_open_arena/
+      apf_wall_arena (a flat untextured floor starves the downward optical-flow
+      camera and EKF2 refuses OFFBOARD/ARM). Grid at every intersection of
+      {-5,0,+5} x {-5,0,+5} covers all 4 spawn points [(5,0),(0,5),(-5,0),
+      (0,-5)], the shared goal (0,0), and the 4 diagonal waypoints the drones
+      drift through while converging — all well inside the ±10 m walls.
+    -->
+    <model name="flow_marker_center"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.97 0.97 0.97 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>0 0 0.01 0 0 0</pose></model>
+
+    <model name="flow_marker_n"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.8 0.1 0.1 1</ambient><diffuse>0.9 0.15 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>5 0 0.01 0 0 0</pose></model>
+    <model name="flow_marker_s"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.1 0.8 1</ambient><diffuse>0.15 0.15 0.9 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-5 0 0.01 0 0 0</pose></model>
+    <model name="flow_marker_e"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.7 0.1 1</ambient><diffuse>0.15 0.8 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>0 5 0.01 0 0 0</pose></model>
+    <model name="flow_marker_w"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.85 0.75 0.1 1</ambient><diffuse>0.95 0.85 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>0 -5 0.01 0 0 0</pose></model>
+
+    <model name="flow_marker_ne"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.85 0.4 0.05 1</ambient><diffuse>0.95 0.5 0.1 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>5 5 0.01 0 0 0</pose></model>
+    <model name="flow_marker_nw"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.5 0.1 0.6 1</ambient><diffuse>0.6 0.15 0.7 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>5 -5 0.01 0 0 0</pose></model>
+    <model name="flow_marker_se"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.6 0.7 1</ambient><diffuse>0.15 0.7 0.8 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-5 5 0.01 0 0 0</pose></model>
+    <model name="flow_marker_sw"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.6 0.6 0.1 1</ambient><diffuse>0.7 0.7 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-5 -5 0.01 0 0 0</pose></model>
+
+  </world>
+</sdf>

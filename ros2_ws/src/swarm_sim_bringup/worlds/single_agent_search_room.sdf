@@ -1,0 +1,922 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="single_agent_search_room">
+
+    <gravity>0 0 -9.81</gravity>
+
+    <gui fullscreen="0">
+      <plugin filename="MinimalScene" name="3D View">
+        <gz-gui>
+          <title>3D View</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <ambient_light>0.45 0.45 0.45</ambient_light>
+        <background_color>0.88 0.91 0.94</background_color>
+        <!-- Free-look camera centered between drone-0 (0,0) and drone-1 (0,5) spawns -->
+        <camera_pose>0 -30 30 0 0.65 1.57</camera_pose>
+        <camera_clip>
+          <near>0.25</near>
+          <far>5000</far>
+        </camera_clip>
+      </plugin>
+      <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
+        <gz-gui>
+          <property key="state" type="string">floating</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="GzSceneManager" name="Scene Manager">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="InteractiveViewControl" name="Interactive view control">
+        <gz-gui>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <!-- CameraTracking removed: PX4 gz_bridge calls /gui/follow to lock the
+           camera onto the spawned model.  Without this plugin the service does
+           not exist so PX4's request times out silently and the camera stays
+           free for manual orbit/pan/zoom via InteractiveViewControl. -->
+    </gui>
+
+    <scene>
+      <ambient>0.78 0.78 0.78 1</ambient>
+      <background>0.90 0.93 0.96 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <light name="sun" type="directional">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 100 0 0 0</pose>
+      <diffuse>0.95 0.95 0.95 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.45 0.15 -0.88</direction>
+    </light>
+
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <!--
+      Two-room layout (Gazebo X = East, Gazebo Y = North in NED frame):
+        Room A  E: -8 → +8   N: -8 → +8   (drone spawns at X=0, Y=0 = center)
+        Corridor E: +8 → +14  N: -2 → +2   (4 m wide, 6 m long, going East)
+        Room B  E: +14 → +30  N: -8 → +8
+    -->
+
+    <!-- ════════════════════════════════════════════
+         FLOOR & CEILING  (one slab each, covers full footprint)
+    ════════════════════════════════════════════ -->
+
+    <model name="ground">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>38.6 16.6 0.2</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>38.6 16.6 0.2</size></box></geometry>
+          <material>
+            <ambient>0.60 0.60 0.60 1</ambient>
+            <diffuse>0.70 0.70 0.70 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>11 0 -0.1 0 0 0</pose>
+    </model>
+
+    <model name="ceiling">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>38.6 16.6 0.2</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>38.6 16.6 0.2</size></box></geometry>
+          <material>
+            <ambient>0.72 0.72 0.74 1</ambient>
+            <diffuse>0.82 0.82 0.84 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>11 0 10.1 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         ROOM A WALLS  (interior: E -8→+8, N -8→+8)
+    ════════════════════════════════════════════ -->
+
+    <model name="wall_A_south">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>16.6 0.3 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>16.6 0.3 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>0 -8.15 5.0 0 0 0</pose>
+    </model>
+
+    <model name="wall_A_north">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>16.6 0.3 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>16.6 0.3 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>0 8.15 5.0 0 0 0</pose>
+    </model>
+
+    <model name="wall_A_west">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 16.6 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 16.6 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-8.15 0 5.0 0 0 0</pose>
+    </model>
+
+    <!-- East wall of Room A: two sections with a 4 m corridor opening (N: -2 → +2) -->
+    <model name="wall_A_east_south">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 6.0 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 6.0 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>8.15 -5.0 5.0 0 0 0</pose>
+    </model>
+
+    <model name="wall_A_east_north">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 6.0 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 6.0 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>8.15 5.0 5.0 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         CORRIDOR WALLS  (E: +8→+14, N: -2→+2)
+    ════════════════════════════════════════════ -->
+
+    <model name="wall_corr_south">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>6.0 0.3 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>6.0 0.3 10.0</size></box></geometry>
+          <material><ambient>0.50 0.52 0.58 1</ambient><diffuse>0.60 0.62 0.68 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>11.0 -2.15 5.0 0 0 0</pose>
+    </model>
+
+    <model name="wall_corr_north">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>6.0 0.3 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>6.0 0.3 10.0</size></box></geometry>
+          <material><ambient>0.50 0.52 0.58 1</ambient><diffuse>0.60 0.62 0.68 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>11.0 2.15 5.0 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         ROOM B WALLS  (interior: E +14→+30, N -8→+8)
+    ════════════════════════════════════════════ -->
+
+    <!-- West wall of Room B: two sections with 4 m corridor opening -->
+    <model name="wall_B_west_south">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 6.0 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 6.0 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>14.15 -5.0 5.0 0 0 0</pose>
+    </model>
+
+    <model name="wall_B_west_north">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 6.0 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 6.0 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>14.15 5.0 5.0 0 0 0</pose>
+    </model>
+
+    <model name="wall_B_south">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>16.6 0.3 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>16.6 0.3 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>22.0 -8.15 5.0 0 0 0</pose>
+    </model>
+
+    <model name="wall_B_north">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>16.6 0.3 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>16.6 0.3 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>22.0 8.15 5.0 0 0 0</pose>
+    </model>
+
+    <model name="wall_B_east">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 16.6 10.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 16.6 10.0</size></box></geometry>
+          <material><ambient>0.55 0.57 0.62 1</ambient><diffuse>0.65 0.67 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>30.15 0 5.0 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         ROOM A OBSTACLES
+    ════════════════════════════════════════════ -->
+
+    <!-- Orange crate, NW quadrant -->
+    <model name="crate_A1">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>1.8 1.4 2.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>1.8 1.4 2.0</size></box></geometry>
+          <material><ambient>0.80 0.55 0.18 1</ambient><diffuse>0.88 0.62 0.24 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-5.0 4.0 1.0 0 0 0.4</pose>
+    </model>
+
+    <!-- Blue low crate, SW quadrant -->
+    <model name="crate_A2">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>2.2 0.8 1.4</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>2.2 0.8 1.4</size></box></geometry>
+          <material><ambient>0.22 0.52 0.78 1</ambient><diffuse>0.28 0.60 0.86 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-5.0 -5.0 0.7 0 0 0</pose>
+    </model>
+
+    <!-- Tall brown pillar, NE quadrant -->
+    <model name="pillar_A1">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.40</radius><length>5.0</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.40</radius><length>5.0</length></cylinder></geometry>
+          <material><ambient>0.52 0.30 0.14 1</ambient><diffuse>0.60 0.36 0.18 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>4.0 5.0 2.5 0 0 0</pose>
+    </model>
+
+    <!-- partition_A1 removed — was 1.3 m from spawn, caused immediate wall collision -->
+
+    <!-- Steel-blue E-W divider, north section -->
+    <model name="divider_A2">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>4.0 0.3 2.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>4.0 0.3 2.0</size></box></geometry>
+          <material><ambient>0.40 0.50 0.60 1</ambient><diffuse>0.48 0.58 0.68 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>2.0 3.0 1.0 0 0 0</pose>
+    </model>
+
+    <!-- SHELF A (fly-under): SE quadrant, centre E=4.5 N=-4.0
+         Platform bottom Z=2.9 m; drone at 1.5 m → range_up = 1.3 m > ceiling_clearance_m (1.2) ✓
+         RPLIDAR sees the 4 legs in 2-D → APF repels → drone threads between them. -->
+    <model name="shelf_A_platform">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>3.0 2.5 0.2</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>3.0 2.5 0.2</size></box></geometry>
+          <material><ambient>0.55 0.50 0.40 1</ambient><diffuse>0.63 0.58 0.46 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>4.5 -4.0 3.0 0 0 0</pose>
+    </model>
+
+    <model name="shelf_A_leg_ne">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 0.15 2.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.15 2.9</size></box></geometry>
+          <material><ambient>0.35 0.22 0.10 1</ambient><diffuse>0.42 0.28 0.14 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>5.85 -2.90 1.45 0 0 0</pose>
+    </model>
+
+    <model name="shelf_A_leg_nw">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 0.15 2.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.15 2.9</size></box></geometry>
+          <material><ambient>0.35 0.22 0.10 1</ambient><diffuse>0.42 0.28 0.14 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>3.15 -2.90 1.45 0 0 0</pose>
+    </model>
+
+    <model name="shelf_A_leg_se">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 0.15 2.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.15 2.9</size></box></geometry>
+          <material><ambient>0.35 0.22 0.10 1</ambient><diffuse>0.42 0.28 0.14 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>5.85 -5.10 1.45 0 0 0</pose>
+    </model>
+
+    <model name="shelf_A_leg_sw">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 0.15 2.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.15 2.9</size></box></geometry>
+          <material><ambient>0.35 0.22 0.10 1</ambient><diffuse>0.42 0.28 0.14 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>3.15 -5.10 1.45 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         CORRIDOR OBSTACLES  (E: +8→+14, N: -2→+2)
+    ════════════════════════════════════════════ -->
+
+    <!-- Rust pillar offset from centre — drone must navigate around it in the 4 m wide corridor -->
+    <model name="pillar_corr">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.30</radius><length>6.0</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.30</radius><length>6.0</length></cylinder></geometry>
+          <material><ambient>0.70 0.35 0.15 1</ambient><diffuse>0.80 0.42 0.20 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>11.0 0.5 3.0 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         ROOM B OBSTACLES  (E: +14→+30, N: -8→+8)
+    ════════════════════════════════════════════ -->
+
+    <!-- Large purple crate, SW area -->
+    <model name="crate_B1">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>2.5 2.0 2.2</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>2.5 2.0 2.2</size></box></geometry>
+          <material><ambient>0.48 0.30 0.68 1</ambient><diffuse>0.56 0.36 0.76 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>16.0 -5.5 1.1 0 0 0.3</pose>
+    </model>
+
+    <!-- Tall dark pillar, NW area of Room B -->
+    <model name="pillar_B1">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.50</radius><length>5.0</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.50</radius><length>5.0</length></cylinder></geometry>
+          <material><ambient>0.40 0.25 0.12 1</ambient><diffuse>0.48 0.30 0.16 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>20.0 5.0 2.5 0 0 0</pose>
+    </model>
+
+    <!-- Brick-red arch wall: runs N-S at E=23 with a 6 m central gap (N: -3 → +3).
+         Forces drone to find the gap to reach the east section of Room B. -->
+    <model name="arch_wall_B_south">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 5.0 3.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 5.0 3.0</size></box></geometry>
+          <material><ambient>0.70 0.40 0.30 1</ambient><diffuse>0.78 0.48 0.36 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>23.0 -5.5 1.5 0 0 0</pose>
+    </model>
+
+    <model name="arch_wall_B_north">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 5.0 3.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 5.0 3.0</size></box></geometry>
+          <material><ambient>0.70 0.40 0.30 1</ambient><diffuse>0.78 0.48 0.36 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>23.0 5.5 1.5 0 0 0</pose>
+    </model>
+
+    <!-- Teal E-W partition, central Room B -->
+    <model name="partition_B1">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>4.5 0.3 2.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>4.5 0.3 2.5</size></box></geometry>
+          <material><ambient>0.25 0.52 0.56 1</ambient><diffuse>0.32 0.60 0.64 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>21.0 -1.0 1.25 0 0 0</pose>
+    </model>
+
+    <!-- SHELF B (fly-under): NE area of Room B, same geometry as shelf_A
+         Platform bottom Z=2.9 m; range_up at 1.5 m altitude = 1.3 m > ceiling_clearance_m ✓ -->
+    <model name="shelf_B_platform">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>3.0 2.5 0.2</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>3.0 2.5 0.2</size></box></geometry>
+          <material><ambient>0.55 0.50 0.40 1</ambient><diffuse>0.63 0.58 0.46 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>27.0 4.0 3.0 0 0 0</pose>
+    </model>
+
+    <model name="shelf_B_leg_ne">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 0.15 2.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.15 2.9</size></box></geometry>
+          <material><ambient>0.35 0.22 0.10 1</ambient><diffuse>0.42 0.28 0.14 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>28.35 5.10 1.45 0 0 0</pose>
+    </model>
+
+    <model name="shelf_B_leg_nw">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 0.15 2.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.15 2.9</size></box></geometry>
+          <material><ambient>0.35 0.22 0.10 1</ambient><diffuse>0.42 0.28 0.14 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>25.65 5.10 1.45 0 0 0</pose>
+    </model>
+
+    <model name="shelf_B_leg_se">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 0.15 2.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.15 2.9</size></box></geometry>
+          <material><ambient>0.35 0.22 0.10 1</ambient><diffuse>0.42 0.28 0.14 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>28.35 2.90 1.45 0 0 0</pose>
+    </model>
+
+    <model name="shelf_B_leg_sw">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 0.15 2.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.15 2.9</size></box></geometry>
+          <material><ambient>0.35 0.22 0.10 1</ambient><diffuse>0.42 0.28 0.14 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>25.65 2.90 1.45 0 0 0</pose>
+    </model>
+
+    <!-- Olive crate, SE area of Room B -->
+    <model name="crate_B2">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>1.5 2.0 1.8</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>1.5 2.0 1.8</size></box></geometry>
+          <material><ambient>0.55 0.52 0.22 1</ambient><diffuse>0.64 0.60 0.28 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>28.0 -6.5 0.9 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         TARGETS
+    ════════════════════════════════════════════ -->
+
+    <!-- Red can 2: far NE corner of Room B (east of arch wall) -->
+    <include>
+      <uri>model://red_can</uri>
+      <name>red_can_2</name>
+      <pose>29.0 7.0 0.0 0 0 -0.3</pose>
+    </include>
+
+    <!-- ════════════════════════════════════════════
+         OPTICAL FLOW MARKERS
+         19 coloured tiles: Room A 3×3 + Corridor 1 + Room B 3×3
+    ════════════════════════════════════════════ -->
+
+    <!-- Room A: X = -4, 0, +4  ×  Y = -4, 0, +4 -->
+    <model name="flow_A_sw"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.12 0.72 0.72 1</ambient><diffuse>0.18 0.82 0.82 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>-4 -4 0.01 0 0 0</pose></model>
+
+    <model name="flow_A_s"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.15 0.15 0.85 1</ambient><diffuse>0.20 0.20 0.95 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>0 -4 0.01 0 0 0</pose></model>
+
+    <model name="flow_A_se"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.15 0.65 0.15 1</ambient><diffuse>0.20 0.75 0.20 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>4 -4 0.01 0 0 0</pose></model>
+
+    <model name="flow_A_w"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.75 0.70 0.12 1</ambient><diffuse>0.85 0.80 0.18 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>-4 0 0.01 0 0 0</pose></model>
+
+    <model name="flow_A_center"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.92 0.92 0.92 1</ambient><diffuse>0.98 0.98 0.98 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>0 0 0.01 0 0 0</pose></model>
+
+    <model name="flow_A_e"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.65 0.25 0.78 1</ambient><diffuse>0.74 0.30 0.88 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>4 0 0.01 0 0 0</pose></model>
+
+    <model name="flow_A_nw"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.12 0.70 0.78 1</ambient><diffuse>0.18 0.80 0.88 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>-4 4 0.01 0 0 0</pose></model>
+
+    <model name="flow_A_n"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.86 0.42 0.12 1</ambient><diffuse>0.96 0.52 0.18 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>0 4 0.01 0 0 0</pose></model>
+
+    <model name="flow_A_ne"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.36 0.78 0.28 1</ambient><diffuse>0.42 0.88 0.34 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>4 4 0.01 0 0 0</pose></model>
+
+    <!-- Corridor: 1 marker at centre -->
+    <model name="flow_corr"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.90 0.90 0.20 1</ambient><diffuse>0.98 0.98 0.26 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>11 0 0.01 0 0 0</pose></model>
+
+    <!-- Room B: X = 18, 22, 26  ×  Y = -4, 0, +4 -->
+    <model name="flow_B_sw"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.12 0.72 0.72 1</ambient><diffuse>0.18 0.82 0.82 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>18 -4 0.01 0 0 0</pose></model>
+
+    <model name="flow_B_s"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.15 0.15 0.85 1</ambient><diffuse>0.20 0.20 0.95 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>22 -4 0.01 0 0 0</pose></model>
+
+    <model name="flow_B_se"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.15 0.65 0.15 1</ambient><diffuse>0.20 0.75 0.20 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>26 -4 0.01 0 0 0</pose></model>
+
+    <model name="flow_B_w"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.75 0.70 0.12 1</ambient><diffuse>0.85 0.80 0.18 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>18 0 0.01 0 0 0</pose></model>
+
+    <model name="flow_B_center"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.92 0.92 0.92 1</ambient><diffuse>0.98 0.98 0.98 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>22 0 0.01 0 0 0</pose></model>
+
+    <model name="flow_B_e"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.65 0.25 0.78 1</ambient><diffuse>0.74 0.30 0.88 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>26 0 0.01 0 0 0</pose></model>
+
+    <model name="flow_B_nw"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.12 0.70 0.78 1</ambient><diffuse>0.18 0.80 0.88 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>18 4 0.01 0 0 0</pose></model>
+
+    <model name="flow_B_n"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.86 0.42 0.12 1</ambient><diffuse>0.96 0.52 0.18 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>22 4 0.01 0 0 0</pose></model>
+
+    <model name="flow_B_ne"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.7 0.7 0.02</size></box></geometry>
+        <material><ambient>0.36 0.78 0.28 1</ambient><diffuse>0.42 0.88 0.34 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.7 0.7 0.02</size></box></geometry></collision>
+    </link><pose>26 4 0.01 0 0 0</pose></model>
+
+    <!-- ════════════════════════════════════════════
+         ROOM B — SECOND FLOOR / MEZZANINE (NW corner, against north + west walls)
+         Floor slab: 7 m (E) × 6 m (N), covering E: -8→-1, N: +2→+8
+         Slab bottom at Z=2.0 m → drone at 1.5 m altitude has range_up = 0.4 m (< filter
+         threshold of 0.8 m) so ceiling_clearance does NOT trigger under the slab.
+         The drone can freely navigate below, then fly over the south/east open edge.
+    ════════════════════════════════════════════ -->
+
+    <!-- Concrete slab: 7×6×0.3 m, bottom at Z=2.0 m -->
+    <model name="mezz_slab">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>7.0 6.0 0.3</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>7.0 6.0 0.3</size></box></geometry>
+          <material><ambient>0.62 0.62 0.64 1</ambient><diffuse>0.72 0.72 0.74 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-4.5 5.0 2.15 0 0 0</pose>
+    </model>
+
+    <!-- 4 support columns holding up the slab -->
+    <model name="mezz_col_sw">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.4 0.4 2.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.4 0.4 2.0</size></box></geometry>
+          <material><ambient>0.42 0.38 0.32 1</ambient><diffuse>0.52 0.48 0.40 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-6.5 3.3 1.0 0 0 0</pose>
+    </model>
+
+    <model name="mezz_col_se">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.4 0.4 2.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.4 0.4 2.0</size></box></geometry>
+          <material><ambient>0.42 0.38 0.32 1</ambient><diffuse>0.52 0.48 0.40 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-2.5 3.3 1.0 0 0 0</pose>
+    </model>
+
+    <model name="mezz_col_nw">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.4 0.4 2.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.4 0.4 2.0</size></box></geometry>
+          <material><ambient>0.42 0.38 0.32 1</ambient><diffuse>0.52 0.48 0.40 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-6.5 6.7 1.0 0 0 0</pose>
+    </model>
+
+    <model name="mezz_col_ne">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.4 0.4 2.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.4 0.4 2.0</size></box></geometry>
+          <material><ambient>0.42 0.38 0.32 1</ambient><diffuse>0.52 0.48 0.40 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-2.5 6.7 1.0 0 0 0</pose>
+    </model>
+
+    <!-- Balcony railing — south edge (open toward Room A centre) -->
+    <model name="mezz_rail_south">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>7.0 0.12 0.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>7.0 0.12 0.9</size></box></geometry>
+          <material><ambient>0.70 0.68 0.64 1</ambient><diffuse>0.80 0.78 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-4.5 2.06 2.75 0 0 0</pose>
+    </model>
+
+    <!-- Balcony railing — east edge (open toward corridor side) -->
+    <model name="mezz_rail_east">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.12 5.9 0.9</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.12 5.9 0.9</size></box></geometry>
+          <material><ambient>0.70 0.68 0.64 1</ambient><diffuse>0.80 0.78 0.72 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-1.06 5.05 2.75 0 0 0</pose>
+    </model>
+
+    <!-- Items on the mezzanine level -->
+    <model name="mezz_box">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.8 0.7 0.7</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.8 0.7 0.7</size></box></geometry>
+          <material><ambient>0.72 0.46 0.18 1</ambient><diffuse>0.82 0.54 0.24 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-6.0 4.0 2.65 0 0 0.3</pose>
+    </model>
+
+    <model name="mezz_barrel">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.25</radius><length>0.70</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.25</radius><length>0.70</length></cylinder></geometry>
+          <material><ambient>0.30 0.52 0.28 1</ambient><diffuse>0.38 0.62 0.34 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>-3.0 6.5 2.65 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         ROOM B — EXTRA PILLARS
+    ════════════════════════════════════════════ -->
+
+    <!-- Slim tall pillar, west entry zone of Room B -->
+    <model name="pillar_B2">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.35</radius><length>6.0</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.35</radius><length>6.0</length></cylinder></geometry>
+          <material><ambient>0.44 0.28 0.14 1</ambient><diffuse>0.52 0.34 0.18 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>16.0 3.0 3.0 0 0 0</pose>
+    </model>
+
+    <!-- Thin pillar, far SE corner of Room B -->
+    <model name="pillar_B3">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.28</radius><length>6.5</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.28</radius><length>6.5</length></cylinder></geometry>
+          <material><ambient>0.44 0.28 0.14 1</ambient><diffuse>0.52 0.34 0.18 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>29.5 -2.5 3.25 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         ROOM B — TALL WALLS
+    ════════════════════════════════════════════ -->
+
+    <!-- Slate-grey N-S wall, 5 m tall — divides west entry zone from central N area -->
+    <model name="tall_wall_B1">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 6.5 5.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 6.5 5.0</size></box></geometry>
+          <material><ambient>0.46 0.48 0.52 1</ambient><diffuse>0.56 0.58 0.62 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>18.0 2.25 2.5 0 0 0</pose>
+    </model>
+
+    <!-- Charcoal E-W wall, 4.5 m tall — NE section of Room B -->
+    <model name="tall_wall_B2">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>4.0 0.3 4.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>4.0 0.3 4.5</size></box></geometry>
+          <material><ambient>0.36 0.38 0.42 1</ambient><diffuse>0.44 0.46 0.50 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>27.0 2.0 2.25 0 0 0</pose>
+    </model>
+
+    <!-- ════════════════════════════════════════════
+         ROOM B — BRANCHING WALL AREA (south section)
+         A horizontal stem + two arms create a comb/U structure.
+         Gaps between arms (~3 m) force the drone to find passages south.
+         Stem: E-W at N=-3.5, from E=18.5 to E=26.0 (7.5 m long, 4 m tall)
+         Arm1: N-S at E=19.5, from N=-3.5 to N=-7.0
+         Arm2: N-S at E=25.5, from N=-3.5 to N=-7.0
+    ════════════════════════════════════════════ -->
+
+    <model name="branch_stem">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>7.5 0.3 4.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>7.5 0.3 4.0</size></box></geometry>
+          <material><ambient>0.60 0.42 0.24 1</ambient><diffuse>0.70 0.50 0.30 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>22.25 -3.5 2.0 0 0 0</pose>
+    </model>
+
+    <model name="branch_arm1">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 3.5 3.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 3.5 3.5</size></box></geometry>
+          <material><ambient>0.60 0.42 0.24 1</ambient><diffuse>0.70 0.50 0.30 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>19.5 -5.25 1.75 0 0 0</pose>
+    </model>
+
+    <model name="branch_arm2">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.3 3.5 3.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.3 3.5 3.5</size></box></geometry>
+          <material><ambient>0.60 0.42 0.24 1</ambient><diffuse>0.70 0.50 0.30 1</diffuse></material>
+        </visual>
+      </link>
+      <pose>25.5 -5.25 1.75 0 0 0</pose>
+    </model>
+
+  </world>
+</sdf>

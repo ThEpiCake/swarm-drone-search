@@ -1,0 +1,149 @@
+digraph Mode2Navigation {
+  graph [
+    rankdir=TB,
+    bgcolor="white",
+    pad="0.35",
+    nodesep="0.42",
+    ranksep="0.62",
+    splines=polyline,
+    outputorder=edgesfirst,
+    fontname="DejaVu Sans"
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="DejaVu Sans",
+    fontsize=12,
+    margin="0.12,0.08",
+    color="#334155",
+    penwidth=1.2,
+    fillcolor="#F8FAFC",
+    fontcolor="#0F172A"
+  ];
+
+  edge [
+    color="#475569",
+    arrowsize=0.75,
+    penwidth=1.25,
+    fontname="DejaVu Sans",
+    fontsize=10,
+    fontcolor="#334155"
+  ];
+
+  title [
+    label="Mode 2: SCAN Navigation Hierarchy",
+    shape=plain,
+    fontsize=22,
+    fontcolor="#0F172A"
+  ];
+
+  subgraph cluster_inputs {
+    label="Sensor and Pose Inputs";
+    style="rounded,filled";
+    color="#DBEAFE";
+    fillcolor="#EFF6FF";
+    fontname="DejaVu Sans";
+    fontsize=15;
+    fontcolor="#1E3A8A";
+
+    depth [label="RGB-D depth image\n3D occupancy evidence", fillcolor="#DBEAFE"];
+    lidar [label="2D LiDAR scan\n360 deg obstacle ranges", fillcolor="#DBEAFE"];
+    pose [label="GNSS-denied pose\nPX4 EKF2 + SLAM/odom_ned", fillcolor="#DBEAFE"];
+    ranges [label="Range up/down\nfloor and ceiling guards", fillcolor="#DBEAFE"];
+    target [label="Target detector\nred-can TargetFound", fillcolor="#DBEAFE"];
+  }
+
+  subgraph cluster_mapper {
+    label="Global Exploration Layer: voxel_mapper";
+    style="rounded,filled";
+    color="#DCFCE7";
+    fillcolor="#F0FDF4";
+    fontname="DejaVu Sans";
+    fontsize=15;
+    fontcolor="#14532D";
+
+    voxels [label="3D log-odds voxel map\nfree / occupied / unknown", fillcolor="#DCFCE7"];
+    slice [label="Current altitude slice\nobstacle mask + world bounds", fillcolor="#DCFCE7"];
+    clusters [label="Frontier clusters\nreachable component first", fillcolor="#DCFCE7"];
+    viewpoints [label="Viewpoint candidates\nstandoff + yaw + clearance", fillcolor="#DCFCE7"];
+    scoring [label="Score candidates\ninfo gain + path cost + yaw\nprogress + Voronoi clearance", fillcolor="#DCFCE7"];
+    astar [label="A* route to selected viewpoint\nfrontier_path", fillcolor="#BBF7D0"];
+    empty_path [label="No valid route\npublish empty frontier_path", fillcolor="#FEF9C3"];
+  }
+
+  subgraph cluster_controller {
+    label="Mode 2 Controller: search_mission_controller";
+    style="rounded,filled";
+    color="#EDE9FE";
+    fillcolor="#F5F3FF";
+    fontname="DejaVu Sans";
+    fontsize=15;
+    fontcolor="#4C1D95";
+
+    scan_state [label="SCAN state\n20 Hz control loop", fillcolor="#EDE9FE"];
+    terminate [label="Mission / layer checks\ncoverage, timeout, all layers\nfloor and ceiling guards", fillcolor="#EDE9FE"];
+    inspect [label="TARGET_INSPECT\nhold XY, look at target 10 s\nthen resume SCAN", fillcolor="#FCE7F3"];
+    latch [label="Latch active frontier_path\nfollow waypoints in order", fillcolor="#EDE9FE"];
+    hold [label="No active route\nhold position + slow yaw scan\nwait for mapper", fillcolor="#FEF9C3"];
+    waypoint [label="Active waypoint\nN/E target + desired yaw", fillcolor="#EDE9FE"];
+    watchdog [label="Progress watchdog\nroute stalled or all VFH sectors blocked\nclear route and wait for mapper", fillcolor="#FEE2E2"];
+    vfh [label="Holonomic VFH local safety\n72 sectors x 5 deg\nchoose closest open valley", fillcolor="#DDD6FE"];
+    yaw [label="Camera-aware yaw\nrate limit + speed scaling", fillcolor="#EDE9FE"];
+    altitude [label="Altitude P-controller\nhold current scan layer", fillcolor="#EDE9FE"];
+    velocity [label="Velocity setpoint\nvn, ve, vz, yaw", fillcolor="#C4B5FD"];
+  }
+
+  subgraph cluster_px4 {
+    label="PX4 Offboard and World Feedback";
+    style="rounded,filled";
+    color="#FED7AA";
+    fillcolor="#FFF7ED";
+    fontname="DejaVu Sans";
+    fontsize=15;
+    fontcolor="#7C2D12";
+
+    px4 [label="PX4 Offboard velocity control\nEKF2 local position", fillcolor="#FED7AA"];
+    motion [label="Drone motion in Gazebo\nnew observations", fillcolor="#FED7AA"];
+  }
+
+  { rank=min; title; }
+  title -> depth [style=invis, weight=8];
+
+  depth -> voxels [label="integrate depth"];
+  pose -> voxels [label="sensor pose"];
+  ranges -> terminate [label="guards"];
+  target -> scan_state [label="confirmed target event"];
+
+  voxels -> slice;
+  slice -> clusters;
+  clusters -> viewpoints;
+  viewpoints -> scoring;
+  scoring -> astar [label="best selected viewpoint"];
+  scoring -> empty_path [label="all candidates rejected"];
+
+  astar -> latch [label="/px4_0/frontier_path"];
+  empty_path -> hold [label="clear stale path"];
+
+  scan_state -> terminate;
+  terminate -> inspect [label="target found"];
+  inspect -> scan_state [label="resume"];
+  terminate -> latch [label="continue scan"];
+  latch -> hold [label="no route"];
+  latch -> waypoint [label="active route"];
+  waypoint -> watchdog;
+  watchdog -> hold [label="stuck / no progress"];
+  watchdog -> vfh [label="route healthy"];
+  lidar -> vfh [label="sector histogram"];
+  waypoint -> vfh [label="goal direction"];
+  vfh -> yaw [label="safe XY vector"];
+  yaw -> velocity;
+  altitude -> velocity;
+  terminate -> altitude [label="scan altitude"];
+  velocity -> px4 [label="/fmu/in/trajectory_setpoint"];
+  px4 -> motion;
+
+  motion -> depth [label="new RGB-D frame", color="#64748B", style=dashed, constraint=false];
+  motion -> lidar [label="new LiDAR scan", color="#64748B", style=dashed, constraint=false];
+  motion -> pose [label="updated local pose", color="#64748B", style=dashed, constraint=false];
+}

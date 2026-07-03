@@ -1,0 +1,151 @@
+digraph Mode2NavigationSlide {
+  graph [
+    rankdir=TB,
+    bgcolor="white",
+    pad="0.30",
+    nodesep="0.45",
+    ranksep="0.55",
+    splines=spline,
+    outputorder=edgesfirst,
+    fontname="DejaVu Sans"
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    fontname="DejaVu Sans",
+    fontsize=14,
+    margin="0.14,0.09",
+    color="#334155",
+    penwidth=1.3,
+    fillcolor="#F8FAFC",
+    fontcolor="#0F172A"
+  ];
+
+  edge [
+    color="#475569",
+    arrowsize=0.8,
+    penwidth=1.35,
+    fontname="DejaVu Sans",
+    fontsize=11,
+    fontcolor="#334155"
+  ];
+
+  title [
+    label="Mode 2: SCAN Navigation Hierarchy",
+    shape=plain,
+    fontsize=24,
+    fontcolor="#0F172A"
+  ];
+
+  sensors [
+    label="Sensor and pose inputs\nRGB-D depth | 2D LiDAR | SLAM/PX4 pose | range up/down | target detector",
+    fillcolor="#DBEAFE",
+    color="#60A5FA"
+  ];
+
+  mapper [
+    label="Global exploration layer: voxel_mapper\n3D log-odds voxel map -> altitude slice -> frontier clusters",
+    fillcolor="#DCFCE7",
+    color="#22C55E"
+  ];
+
+  candidates [
+    label="Candidate viewpoint generation\nstandoff, yaw, world bounds, clearance",
+    fillcolor="#DCFCE7",
+    color="#22C55E"
+  ];
+
+  scoring [
+    label="Viewpoint scoring\ninformation gain + A* path cost + yaw + progress + Voronoi clearance",
+    fillcolor="#BBF7D0",
+    color="#16A34A"
+  ];
+
+  route [
+    label="Selected route\nA* frontier_path to best viewpoint",
+    fillcolor="#86EFAC",
+    color="#15803D"
+  ];
+
+  scan [
+    label="Mode 2 SCAN FSM\ncoverage / timeout / layer / safety / target checks",
+    fillcolor="#EDE9FE",
+    color="#8B5CF6"
+  ];
+
+  route_latch [
+    label="Route latch\nfollow active frontier_path waypoint-by-waypoint",
+    fillcolor="#EDE9FE",
+    color="#8B5CF6"
+  ];
+
+  waypoint [
+    label="Active waypoint\nN/E target + desired yaw",
+    fillcolor="#EDE9FE",
+    color="#8B5CF6"
+  ];
+
+  vfh [
+    label="Holonomic VFH local safety\n72-sector LiDAR histogram -> closest open valley",
+    fillcolor="#DDD6FE",
+    color="#7C3AED"
+  ];
+
+  control [
+    label="Perception-aware motion command\ncamera yaw tracking + speed scaling + altitude P-control",
+    fillcolor="#DDD6FE",
+    color="#7C3AED"
+  ];
+
+  px4 [
+    label="PX4 Offboard velocity setpoint\nvn, ve, vz, yaw -> drone motion",
+    fillcolor="#FED7AA",
+    color="#F97316"
+  ];
+
+  hold [
+    label="No valid route\nhold position + slow yaw scan\nwait for mapper",
+    fillcolor="#FEF9C3",
+    color="#EAB308"
+  ];
+
+  inspect [
+    label="Target found\nhold XY, look at target 10 s\nthen resume SCAN",
+    fillcolor="#FCE7F3",
+    color="#EC4899"
+  ];
+
+  stuck [
+    label="Route stalled / blocked\nclear route and request new path",
+    fillcolor="#FEE2E2",
+    color="#EF4444"
+  ];
+
+  feedback [
+    label="Closed-loop feedback:\nnew motion creates new sensor data\nand updates the map on the next tick",
+    shape=note,
+    fillcolor="#F1F5F9",
+    color="#94A3B8",
+    fontsize=12
+  ];
+
+  title -> sensors [style=invis, weight=8];
+  sensors -> mapper [label="depth + pose"];
+  mapper -> candidates;
+  candidates -> scoring;
+  scoring -> route [label="best valid viewpoint"];
+  scoring -> hold [label="no safe candidate"];
+  route -> scan [label="frontier_path"];
+  scan -> route_latch [label="continue scan"];
+  scan -> inspect [label="confirmed TargetFound"];
+  scan -> hold [label="no active route"];
+  route_latch -> waypoint;
+  waypoint -> vfh [label="goal direction"];
+  vfh -> stuck [label="all sectors blocked / no progress"];
+  stuck -> hold;
+  vfh -> control [label="safe XY velocity"];
+  scan -> control [label="scan altitude", constraint=false];
+  control -> px4;
+  px4 -> feedback;
+}

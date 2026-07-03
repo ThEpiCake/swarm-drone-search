@@ -1,0 +1,128 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="apf_arena">
+
+    <gravity>0 0 -9.81</gravity>
+
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.75 0.75 0.75 1</ambient>
+      <background>0.85 0.88 0.92 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <light name="sun" type="directional">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 100 0 0 0</pose>
+      <diffuse>0.95 0.95 0.95 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.45 0.15 -0.88</direction>
+    </light>
+
+    <!-- Flat ground -->
+    <model name="ground">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>60 60 0.2</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>60 60 0.2</size></box>
+          </geometry>
+          <material>
+            <ambient>0.58 0.58 0.58 1</ambient>
+            <diffuse>0.68 0.68 0.68 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>0 0 -0.1 0 0 0</pose>
+    </model>
+
+    <!--
+      Optical-flow texture markers: a flat untextured ground gives the
+      downward-facing optical-flow camera nothing to track, so EKF2 reports
+      "missing data" and PX4 refuses OFFBOARD/ARM (the exact "optical flow
+      rejects featureless ground" risk already called out for Stage A).
+      Scatter a handful of small, brightly-colored flat tiles around the
+      spawn point — same texture-providing trick the lakehouse world uses
+      with its red_can markers, just simplified to flat colour patches.
+    -->
+    <model name="flow_marker_1"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.8 0.1 0.1 1</ambient><diffuse>0.9 0.15 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>1 1 0.01 0 0 0</pose></model>
+    <model name="flow_marker_2"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.1 0.8 1</ambient><diffuse>0.15 0.15 0.9 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-1 1 0.01 0 0 0</pose></model>
+    <model name="flow_marker_3"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.7 0.1 1</ambient><diffuse>0.15 0.8 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>1 -1 0.01 0 0 0</pose></model>
+    <model name="flow_marker_4"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.85 0.75 0.1 1</ambient><diffuse>0.95 0.85 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-1 -1 0.01 0 0 0</pose></model>
+    <model name="flow_marker_5"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.85 0.4 0.05 1</ambient><diffuse>0.95 0.5 0.1 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>2 0 0.01 0 0 0</pose></model>
+    <model name="flow_marker_6"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.5 0.1 0.6 1</ambient><diffuse>0.6 0.15 0.7 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-2 0 0.01 0 0 0</pose></model>
+    <model name="flow_marker_7"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.6 0.7 1</ambient><diffuse>0.15 0.7 0.8 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>0 2 0.01 0 0 0</pose></model>
+    <model name="flow_marker_8"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.97 0.97 0.97 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>0 -2 0.01 0 0 0</pose></model>
+
+    <!--
+      Single wall obstacle, ~3.85 m ahead (north / +X) of the spawn point
+      (PX4 spawns x500_swarm at world origin, matching offboard_control's
+      home_x=home_y=0 assumption). Wide and tall enough that all 3 horizontal
+      meters of hover altitude intersect the front-range sensor's beam —
+      this is the minimal geometry needed to exercise APF repulsion.
+    -->
+    <model name="apf_wall">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>0.3 8 5</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.3 8 5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.15 0.15 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>4 0 2.5 0 0 0</pose>
+    </model>
+
+  </world>
+</sdf>

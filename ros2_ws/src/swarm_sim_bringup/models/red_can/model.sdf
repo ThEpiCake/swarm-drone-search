@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.9">
+  <model name="red_can">
+    <static>true</static>
+    <link name="link">
+      <pose>0 0 0.061 0 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.033</radius>
+            <length>0.122</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <cylinder>
+            <radius>0.033</radius>
+            <length>0.122</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <!-- Saturated red — chosen to be a clean target for both the
+               YOLO "bottle" placeholder detector and the HSV red-mask
+               filter in swarm_target_detection. -->
+          <ambient>0.8 0.02 0.02 1</ambient>
+          <diffuse>0.85 0.05 0.05 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

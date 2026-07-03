@@ -1,0 +1,64 @@
+# Wildcard node key: node runs namespaced (/px4_1/slam_toolbox); a literal
+# "slam_toolbox:" key does NOT match → params fall back to defaults and SLAM never
+# starts. "/**" matches any node/namespace. (This file is loaded only by D1.)
+/**:
+  ros__parameters:
+    use_sim_time: false
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # Frame IDs for drone 1 — prefixed with "d1_" to avoid TF collisions with drone 0.
+    odom_frame: d1_odom
+    map_frame: d1_map
+    base_frame: d1_lidar_2d_link
+    scan_topic: lidar/scan_filtered   # pre-filtered: floor/ceiling rays removed
+
+    mode: mapping
+
+    resolution: 0.05
+    map_start_at_dock: true
+
+    minimum_travel_distance: 0.40
+    minimum_travel_heading: 0.40
+    scan_buffer_size: 15
+    scan_buffer_maximum_scan_distance: 7.0
+    max_laser_range: 8.0
+    minimum_time_interval: 0.15    # was 0.20 — 6.7 Hz; more anchor points at high speed
+
+    do_loop_closing: false
+    loop_search_maximum_distance: 5.0
+    loop_match_minimum_chain_size: 3
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.45
+    # Binary Occupancy Grid correlation search — scan-to-map matching window.
+    # smear_deviation blurs occupied cells in the binary map before correlation;
+    # wider smear = more tolerant to small registration errors (good for sparse envs).
+    correlation_search_space_dimension: 0.7  # was 0.5 — wider window tolerates larger motion between scans
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.08  # Jazzy slam_toolbox requires 0.005..0.1
+    loop_search_space_dimension: 8.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.05         # was 0.03 — wider smear for loop closure correlation
+
+    # Pose Graph Optimization variance penalties (edge weights in the factor graph).
+    # Higher values → optimizer trusts the prior pose more, punishes inconsistent matches harder.
+    distance_variance_penalty: 0.8   # was 0.5 — penalise noisy distance constraints more
+    angle_variance_penalty: 1.5      # was 1.0 — penalise noisy angle constraints more (spin drift)
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 0.349
+    coarse_angle_resolution: 0.0349
+    minimum_angle_penalty: 0.9
+    minimum_distance_penalty: 0.5
+    use_response_expansion: true
+
+    tf_buffer_duration: 30.0
+    transform_publish_period: 0.05
+    map_update_interval: 0.5
+    use_multithread: true
+    position_covariance_scale: 1.0
+    yaw_covariance_scale: 1.0

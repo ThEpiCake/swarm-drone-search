@@ -1,0 +1,110 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="apf_open_arena">
+
+    <gravity>0 0 -9.81</gravity>
+
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.75 0.75 0.75 1</ambient>
+      <background>0.85 0.88 0.92 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <light name="sun" type="directional">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 100 0 0 0</pose>
+      <diffuse>0.95 0.95 0.95 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.45 0.15 -0.88</direction>
+    </light>
+
+    <!-- Flat open ground — no obstacles. For Stage C the drones themselves
+         are the only obstacles; mutual APF repulsion is the thing under test. -->
+    <model name="ground">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>80 80 0.2</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>80 80 0.2</size></box>
+          </geometry>
+          <material>
+            <ambient>0.58 0.58 0.58 1</ambient>
+            <diffuse>0.68 0.68 0.68 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>0 0 -0.1 0 0 0</pose>
+    </model>
+
+    <!--
+      Optical-flow texture markers: a flat untextured ground gives the
+      downward-facing optical-flow camera nothing to track, so EKF2 reports
+      "missing data" and PX4 refuses OFFBOARD/ARM (same issue solved for
+      Stage B's apf_wall_arena). With 4 drones arming at 4 different spawn
+      points plus converging on a shared center, markers are placed at every
+      intersection of the {-5, 0, +5} x {-5, 0, +5} grid — which lands a
+      marker directly under each of the 4 spawn points [(5,0),(0,5),(-5,0),
+      (0,-5)], the shared goal (0,0), and the 4 corners the drones may drift
+      through while converging.
+    -->
+    <model name="flow_marker_center"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.97 0.97 0.97 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>0 0 0.01 0 0 0</pose></model>
+
+    <model name="flow_marker_n"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.8 0.1 0.1 1</ambient><diffuse>0.9 0.15 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>5 0 0.01 0 0 0</pose></model>
+    <model name="flow_marker_s"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.1 0.8 1</ambient><diffuse>0.15 0.15 0.9 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-5 0 0.01 0 0 0</pose></model>
+    <model name="flow_marker_e"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.7 0.1 1</ambient><diffuse>0.15 0.8 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>0 5 0.01 0 0 0</pose></model>
+    <model name="flow_marker_w"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.85 0.75 0.1 1</ambient><diffuse>0.95 0.85 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>0 -5 0.01 0 0 0</pose></model>
+
+    <model name="flow_marker_ne"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.85 0.4 0.05 1</ambient><diffuse>0.95 0.5 0.1 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>5 5 0.01 0 0 0</pose></model>
+    <model name="flow_marker_nw"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.5 0.1 0.6 1</ambient><diffuse>0.6 0.15 0.7 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>5 -5 0.01 0 0 0</pose></model>
+    <model name="flow_marker_se"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.1 0.6 0.7 1</ambient><diffuse>0.15 0.7 0.8 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-5 5 0.01 0 0 0</pose></model>
+    <model name="flow_marker_sw"><static>true</static><link name="link">
+      <visual name="visual"><geometry><box><size>0.6 0.6 0.02</size></box></geometry>
+        <material><ambient>0.6 0.6 0.1 1</ambient><diffuse>0.7 0.7 0.15 1</diffuse></material></visual>
+      <collision name="collision"><geometry><box><size>0.6 0.6 0.02</size></box></geometry></collision>
+    </link><pose>-5 -5 0.01 0 0 0</pose></model>
+
+  </world>
+</sdf>

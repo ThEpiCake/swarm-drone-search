@@ -1,0 +1,70 @@
+# Wildcard node key: the node runs namespaced (/px4_0/slam_toolbox), so a literal
+# "slam_toolbox:" key does NOT match and the params silently fall back to defaults
+# (scan_topic="scan", base_frame="base_footprint") — which left slam_toolbox with 0
+# scan subscribers and never publishing map→odom. "/**" matches any node/namespace.
+/**:
+  ros__parameters:
+    use_sim_time: false
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # Frame IDs — odom_publisher.py broadcasts TF: odom → lidar_2d_link.
+    # base_frame must match the LaserScan header.frame_id from the Gazebo bridge.
+    odom_frame: odom
+    map_frame: map
+    base_frame: lidar_2d_link
+    scan_topic: lidar/scan_filtered   # pre-filtered: floor/ceiling rays removed
+
+    mode: mapping
+
+    # ── Map resolution ────────────────────────────────────────────────────────
+    resolution: 0.05          # 5 cm — finer than lidar_mapper's 15 cm
+    map_start_at_dock: true   # first scan origin becomes map origin
+
+    # ── LIDAR tuning for RPLIDAR A2M8 (12 m max range, 10 Hz, 360 samples) ──
+    # High minimum_travel_* → fewer scan integrations while hovering/creeping → less drift.
+    # 0.10 rad heading was 5.7° → 60+ updates per rotation → major spin drift cause.
+    minimum_travel_distance: 0.40   # was 0.15 — integrate only on real motion
+    minimum_travel_heading: 0.40    # was 0.10 — ~23° before yaw update; prevents spin drift
+    scan_buffer_size: 15
+    scan_buffer_maximum_scan_distance: 7.0  # was 10.0 — short-range scans are more accurate
+    max_laser_range: 8.0            # was 12.0 — distant returns are noisier; reject far noise
+    minimum_time_interval: 0.15    # was 0.20 — 6.7 Hz; more anchor points at high speed (≥1.3 m/s)
+
+    # ── Loop closure ─────────────────────────────────────────────────────────
+    do_loop_closing: false
+    loop_search_maximum_distance: 5.0
+    loop_match_minimum_chain_size: 3
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.45
+    # Correlation search — wider smear = more tolerant to small registration errors
+    correlation_search_space_dimension: 0.7  # was 0.5 — wider window tolerates larger motion between scans
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.08  # Jazzy slam_toolbox requires 0.005..0.1
+    # Loop closure correlation
+    loop_search_space_dimension: 8.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.05         # was 0.03
+
+    # ── Scan matching (ICP-like) ──────────────────────────────────────────────
+    distance_variance_penalty: 0.8  # was 0.5 — penalise noisy distance constraints more
+    angle_variance_penalty: 1.5     # was 1.0 — penalise noisy angle constraints more
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 0.349
+    coarse_angle_resolution: 0.0349
+    minimum_angle_penalty: 0.9
+    minimum_distance_penalty: 0.5
+    use_response_expansion: true
+
+    # ── TF / timing ───────────────────────────────────────────────────────────
+    tf_buffer_duration: 30.0
+    transform_publish_period: 0.05   # 20 Hz TF output
+    map_update_interval: 0.5         # 2 Hz map topic (reduces CPU in simulation)
+    use_multithread: true
+    position_covariance_scale: 1.0
+    yaw_covariance_scale: 1.0

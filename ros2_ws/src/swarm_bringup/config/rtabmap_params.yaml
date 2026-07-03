@@ -1,0 +1,56 @@
+rtabmap:
+  ros__parameters:
+    use_sim_time: false
+
+    # ── TF frame IDs ──────────────────────────────────────────────────────────
+    # lidar_2d_link is the drone body reference published by odom_publisher.py.
+    # rgbd_link (camera) is connected via static TF lidar_2d_link→rgbd_link.
+    frame_id:     "lidar_2d_link"
+    odom_frame_id: "odom"
+    map_frame_id:  "map"
+
+    # ── Input: RGB + Depth (OAK-D Lite bridged from Gazebo) ──────────────────
+    subscribe_depth:      true
+    subscribe_rgb:        true
+    subscribe_scan:       false
+    subscribe_scan_cloud: false
+    subscribe_odom_info:  false
+    subscribe_user_data:  false
+
+    # Approximate time sync — RGB and depth frames may arrive a few ms apart.
+    approx_sync:              true
+    approx_sync_max_interval: 0.05   # 50 ms tolerance
+
+    # ── Map update triggers ────────────────────────────────────────────────────
+    # Only integrate new observations after meaningful motion — prevents map
+    # bloat when the drone hovers at a frontier.
+    RGBD/LinearUpdate:  "0.10"   # m
+    RGBD/AngularUpdate: "0.10"   # rad (~5.7°)
+
+    # ── Depth filter ──────────────────────────────────────────────────────────
+    RGBD/DepthMin: "0.10"   # m — ignore hits closer than 10 cm
+    RGBD/DepthMax: "8.0"    # m — match voxel_mapper max_range_m
+
+    # ── Loop closure ─────────────────────────────────────────────────────────
+    # 1 Hz attempts — low enough not to spike CPU during active flight.
+    Rtabmap/DetectionRate: "1.0"
+
+    # Minimum visual inliers to accept a loop closure hypothesis.
+    # 10 is conservative; reduces false closures on featureless walls.
+    Vis/MinInliers: "10"
+
+    # ── Memory ────────────────────────────────────────────────────────────────
+    Mem/STMSize:           "30"     # short-term memory slots
+    Mem/NotLinkedNodesKept: "false" # drop orphaned nodes to save RAM
+
+    # ── TF output ─────────────────────────────────────────────────────────────
+    # RTAB-Map publishes map→odom TF at this rate.
+    # slam_pose_fusion.py and slam_to_px4.py both look up map→lidar_2d_link
+    # through the TF chain: map→odom (RTAB-Map) + odom→lidar_2d_link (odom_publisher).
+    publish_tf: true
+    tf_delay:   0.05   # 20 Hz TF
+
+    # ── Occupancy map output ──────────────────────────────────────────────────
+    # Disable 2-D and 3-D map publishing — voxel_mapper owns the mission map.
+    map_always_update:       false
+    map_empty_ray_tracing:   false

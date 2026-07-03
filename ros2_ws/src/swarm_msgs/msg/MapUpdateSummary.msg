@@ -1,0 +1,13 @@
+std_msgs/Header header
+uint8 drone_id
+float32 entropy_mean
+float32 coverage_fraction
+uint32 voxels_updated
+float32 layer_coverage_fraction
+float32 layer_altitude_m
+uint32 layer_observed_cells
+uint32 layer_total_cells
+uint32 frontier_clusters
+uint32 reachable_frontier_clusters
+uint32 reachable_frontier_cells
+bool frontier_route_available

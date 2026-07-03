@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version='1.9'>
+  <model name='x500_swarm'>
+    <self_collide>false</self_collide>
+
+    <include merge='true'>
+      <uri>x500</uri>
+    </include>
+
+    <include merge='true'>
+      <uri>model://optical_flow</uri>
+      <pose relative_to="base_link">0.03 0 -0.1 0 0 0</pose>
+    </include>
+
+    <include merge='true'>
+      <uri>model://LW20</uri>
+      <pose relative_to="base_link">0 0 -0.079 0 1.57 0</pose>
+    </include>
+
+    <joint name="optical_flow_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>flow_link</child>
+      <pose relative_to="base_link">0 0 -0.1 0 1.5707 0</pose>
+    </joint>
+
+    <joint name="lidar_model_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>lw20_link</child>
+      <pose relative_to="base_link">0 0 0 0 0 0</pose>
+    </joint>
+
+    <joint name="lidar_sensor_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>lidar_sensor_link</child>
+    </joint>
+
+    <link name="lidar_sensor_link">
+      <pose relative_to="base_link">0 0 -0.05 0 1.57 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.00001</ixx>
+          <iyy>0.00001</iyy>
+          <izz>0.00001</izz>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+        </inertia>
+      </inertial>
+      <sensor name='lidar' type='gpu_lidar'>
+        <gz_frame_id>lidar_sensor_link</gz_frame_id>
+        <pose>0 0 0 3.14 0 0</pose>
+        <update_rate>50</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.1</min>
+            <max>100.0</max>
+            <resolution>0.01</resolution>
+          </range>
+        </ray>
+        <always_on>1</always_on>
+        <visualize>true</visualize>
+      </sensor>
+    </link>
+
+    <joint name="rgbd_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>rgbd_link</child>
+    </joint>
+
+    <link name="rgbd_link">
+      <pose relative_to="base_link">0.12 0.03 0.242 0 0.785398163 0</pose>
+      <inertial>
+        <mass>0.061</mass>
+        <inertia>
+          <ixx>0.0000460804</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0000055421</iyy>
+          <iyz>0</iyz>
+          <izz>0.0000436519</izz>
+        </inertia>
+      </inertial>
+      <visual name="rgbd_visual">
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://OakD-Lite/meshes/OakDLite.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <sensor name="front_rgb" type="camera">
+        <gz_frame_id>rgbd_link</gz_frame_id>
+        <camera>
+          <horizontal_fov>1.204</horizontal_fov>
+          <image>
+            <width>1920</width>
+            <height>1080</height>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30</update_rate>
+        <visualize>true</visualize>
+      </sensor>
+      <sensor name="front_depth" type="depth_camera">
+        <gz_frame_id>rgbd_link</gz_frame_id>
+        <camera>
+          <horizontal_fov>1.274</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R_FLOAT32</format>
+          </image>
+          <clip>
+            <near>0.2</near>
+            <far>19.1</far>
+          </clip>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30</update_rate>
+        <visualize>true</visualize>
+      </sensor>
+    </link>
+
+    <joint name="range_front_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>range_front_link</child>
+    </joint>
+    <link name="range_front_link">
+      <pose relative_to="base_link">0.18 0 0.03 0 0 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.00001</ixx>
+          <iyy>0.00001</iyy>
+          <izz>0.00001</izz>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+        </inertia>
+      </inertial>
+      <sensor name="range_front" type="lidar">
+        <gz_frame_id>range_front_link</gz_frame_id>
+        <pose>0 0 0 1.570796327 0 0</pose>
+        <update_rate>15</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.15</min>
+            <max>8.0</max>
+            <resolution>0.01</resolution>
+          </range>
+        </ray>
+        <always_on>1</always_on>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+
+    <joint name="range_back_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>range_back_link</child>
+    </joint>
+    <link name="range_back_link">
+      <pose relative_to="base_link">-0.18 0 0.03 0 0 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.00001</ixx>
+          <iyy>0.00001</iyy>
+          <izz>0.00001</izz>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+        </inertia>
+      </inertial>
+      <sensor name="range_back" type="lidar">
+        <gz_frame_id>range_back_link</gz_frame_id>
+        <pose>0 0 0 1.570796327 0 3.141592654</pose>
+        <update_rate>15</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.15</min>
+            <max>8.0</max>
+            <resolution>0.01</resolution>
+          </range>
+        </ray>
+        <always_on>1</always_on>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+
+    <joint name="range_left_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>range_left_link</child>
+    </joint>
+    <link name="range_left_link">
+      <pose relative_to="base_link">0 0.18 0.03 0 0 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.00001</ixx>
+          <iyy>0.00001</iyy>
+          <izz>0.00001</izz>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+        </inertia>
+      </inertial>
+      <sensor name="range_left" type="lidar">
+        <gz_frame_id>range_left_link</gz_frame_id>
+        <pose>0 0 0 1.570796327 0 1.570796327</pose>
+        <update_rate>15</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.15</min>
+            <max>8.0</max>
+            <resolution>0.01</resolution>
+          </range>
+        </ray>
+        <always_on>1</always_on>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+
+    <joint name="range_right_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>range_right_link</child>
+    </joint>
+    <link name="range_right_link">
+      <pose relative_to="base_link">0 -0.18 0.03 0 0 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.00001</ixx>
+          <iyy>0.00001</iyy>
+          <izz>0.00001</izz>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+        </inertia>
+      </inertial>
+      <sensor name="range_right" type="lidar">
+        <gz_frame_id>range_right_link</gz_frame_id>
+        <pose>0 0 0 1.570796327 0 -1.570796327</pose>
+        <update_rate>15</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.15</min>
+            <max>8.0</max>
+            <resolution>0.01</resolution>
+          </range>
+        </ray>
+        <always_on>1</always_on>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+
+    <joint name="range_up_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>range_up_link</child>
+    </joint>
+    <link name="range_up_link">
+      <pose relative_to="base_link">0 0 0.10 0 0 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.00001</ixx>
+          <iyy>0.00001</iyy>
+          <izz>0.00001</izz>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+        </inertia>
+      </inertial>
+      <sensor name="range_up" type="lidar">
+        <gz_frame_id>range_up_link</gz_frame_id>
+        <pose>0 0 0 0 -1.570796327 0</pose>
+        <update_rate>15</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>1</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>0</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.15</min>
+            <max>8.0</max>
+            <resolution>0.01</resolution>
+          </range>
+        </ray>
+        <always_on>1</always_on>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+  </model>
+</sdf>
