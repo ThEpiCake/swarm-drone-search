@@ -9,6 +9,13 @@ simulation experiment campaign. This repository contains the full autonomy code,
 assets, documentation, and experiment automation scripts of the final project (course 26-59,
 Department of Mechanical Engineering).
 
+## Demo video
+
+A full autonomous search mission (takeoff, layered scan, mapping, target inspection,
+return and landing), sped up ~19x to under a minute:
+**[media/drone_swarm_mission_19x.mp4](media/drone_swarm_mission_19x.mp4)**
+(Gazebo view on top, live operator dashboard below).
+
 ## What the system does
 
 Each drone takes off, performs an initial 360° lookaround, explores a two-room warehouse
